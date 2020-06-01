@@ -11,6 +11,17 @@ import neuprint as nu
 from neuprint import NeuronCriteria as NC
 
 
+neuprint_token_env_var = 'NEUPRINT_APPLICATION_CREDENTIALS'
+# TODO maybe avoid need for this later...
+if neuprint_token_env_var not in os.environ:
+    raise RuntimeError('You must set the environment variable '
+        f'{neuprint_token_env_var} before neuprint_helper can work! '
+        '\n\nContact Tom if you do not know how / if not possible!'
+    )
+# Now we can just let `neuprint` handle it.
+del neuprint_token_env_var
+
+
 logger = logging.getLogger('neuprint.client')
 logger.setLevel(logging.DEBUG)
 
@@ -25,10 +36,44 @@ logging.basicConfig(
     filename=log_path
 )
 
+# According to the neuprint docs, this first creation of a Client sets
+# the default client, so set_default_client does not need to be explicitly
+# called. I will start by trying to not use the client object returned by
+# this call, since it seems *that* might make it harder to use
+# multiprocessing or threading to parallelize calls later, as it might make
+# neuprint think we are using some non-default client, which it won't copy
+# as-needed for new workers.
+# TODO should i be using a different dataset, for the second arg?
+# does the `hemibrain_Neuron` type in the debug cypher queries indicate
+# i am not using the correct dataset (probably not)?
+# TODO some value for second argument (default?) to just use the latest?
+# TODO TODO probably move creation of a single client to something that
+# happens at import / first call of `hong_neuprint`, when i make that
+# TODO TODO and then also prompt people to set appropriate env var for token
+# when that happens if not (maybe asking people to manually enter it at a
+# prompt?  .pth files?)
+# TODO maybe unconditionally monkey patch neuprint.Client on init, just to
+# add a warning if manually creating clients (saying when it is / isn't
+# appropriate) (maybe + kwarg to disable warning, also mentioned in
+# warning)? (might need care to not cause same warning when neuprint
+# itself copies code... maybe check the __file__ of the calling code
+# (possible?)?
+# TODO TODO TODO before any of the above, just put a line in a README.md
+# explaining that users should prefer to access my client rather than
+# making their own, and they should only use it for the list of fns below
+# (the ones only the client can do)
+# TODO TODO or maybe just monkey patch the client so it can't make the calls
+# provided by the others? (unless it breaks internals, which it very well
+# might)
+# TODO or maybe only instantiate this inside my own fns (like in fetch_function
+# wrapped fn part + other places that would need client) and never present it?
+client = nu.Client('neuprint.janelia.org', 'hemibrain:v1.0.1')
 
 # This seems to be the most up-to-date documentation on what properties are
 # availble: https://neuprint.janelia.org/public/neuprintuserguide.pdf
-maybe_missing = ['primaryNeurite', 'somaLocation', 'somaRadius', 'timestamp']
+#maybe_missing = ['primaryNeurite', 'somaLocation', 'somaRadius', 'timestamp']
+# (just a hack to hide warning for now. commented above is accurate **wrt PDF**)
+maybe_missing = ['somaLocation', 'somaRadius']
 
 # These don't include the "<rois>: boolean" properties from the docs, which seem
 # to only be defined when True, or only for sets where some have the True
@@ -153,7 +198,7 @@ def describes_neurons(df):
 # TODO unit tests testing this on all/many neuprint return values
 def describes_connections(df):
     return all([c in df.columns for c in 
-        [f'{neuron_id_col}_{s}' for s in ('_pre','_post')]
+        [f'{neuron_id_col}_{s}' for s in ('pre','post')]
     ])
 
 
@@ -178,6 +223,7 @@ def fetch_function(fetch_fn):
         will instead return *one* dataframe that merges the two. `True` will 
         produce an error on return values not satisfying these conditions.
 
+
     `print_time` (`bool`, default=`False`): If `True`, the wrapped function will
         be timed, and this time will be printed before returning.
 
@@ -200,12 +246,14 @@ def fetch_function(fetch_fn):
 
     # TODO need to check none of the fns we are wrapping already have any of the
     # keyword args we add? how?
-    if merge:
-        _mp = 'merge=True and '
 
     @wraps(fetch_fn)
     def wrapped(*args, warn_nullcols=True, merge=False, print_time=False,
         debug=False, **kwargs):
+
+        if merge:
+            # (until i finish testing it)
+            raise NotImplementedError
 
         if debug:
             # TODO also include args / kwargs?
@@ -224,6 +272,7 @@ def fetch_function(fetch_fn):
             duration = time.time()
             print(f'{fetch_fn.__name__} took {duration:.1f}s')
 
+        _mp = 'merge=True and '
         if is_dataframe(outputs):
             warn(outputs)
             # TODO TODO exhaustively unit test `merge` behavior; in triggering,
@@ -233,7 +282,7 @@ def fetch_function(fetch_fn):
                     'merge (expected 2)'
                 )
         else:
-            if len(outputs) > 2:
+            if merge and len(outputs) > 2:
                 raise ValueError(f'{_mp}too many outputs to know how'
                     ' to order outputs or which to merge'
                 )
@@ -269,12 +318,16 @@ def fetch_function(fetch_fn):
                 # end if/elif
             # end for
 
-            if _ndf is None:
-                raise ValueError(f'{_mp}no output satisfying describes_neurons')
-            if _cdf is None:
-                raise ValueError(f'{_mp}no output satisfying '
-                    'describes_connections'
-                )
+            if merge:
+                # TODO maybe use diff message if both missing?
+                if _ndf is None:
+                    raise ValueError(f'{_mp}no output satisfying '
+                        'describes_neurons'
+                    )
+                if _cdf is None:
+                    raise ValueError(f'{_mp}no output satisfying '
+                        'describes_connections'
+                    )
 
         if debug:
             logger.debug(f'after {fetch_fn.__name__} call')
@@ -301,13 +354,15 @@ def fetch_function(fetch_fn):
             neuron_props_to_merge = [c for c in _ndf.columns if c in to_merge]
 
             # TODO delete
+            '''
             print('_NDF.COLUMNS:', _ndf.columns)
             print('_CDF.COLUMNS:', _cdf.columns)
             print('NEURON_PROPS_TO_MERGE:', neuron_props_to_merge)
+            '''
             #
             # could probably just call merge myself at this point, after all the
             # input validation probably takes up more code...
-            merged_df = neuprint.utils.merge_neuron_properties(_ndf, _cdf,
+            merged_df = nu.utils.merge_neuron_properties(_ndf, _cdf,
                 properties=neuron_props_to_merge
             )
             #
@@ -342,9 +397,9 @@ def write_csvs(dataframes, names=None, overwrite=False, verbose=True,
 '''
 
 
-# TODO TODO flags to return diff formats, see the neuprint util conversion fns
+# TODO flag to return diff cnxn format, see the neuprint util conn conversion fn
 @fetch_function
-def fetch_pn_kc_connections(properties=None, sum_across_rois=False,
+def pn_kc_connections(properties=None, sum_across_rois=False,
     checks=True, **kwargs):
     """
     Returns `neuron_df`, `connection_df` as `neuprint.fetch_adjacencies`, but
