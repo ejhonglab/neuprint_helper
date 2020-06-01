@@ -17,12 +17,20 @@ source ./venv/bin/activate
 python3 -m pip install .
 ```
 
+You must also set the environment variable `NEUPRINT_APPLICATION_CREDENTIALS` to
+point to your neuprint authentication token. See their website for how to
+generate one. For some ways of setting environment variables, you may need to
+start a new terminal before it takes effect.
+
 ### Usage
+
+From a terminal where the environment variable `NEUPRINT_APPLICATION_CREDENTIALS` 
+is defined appropriately...
 
 To get the PN->KC connectivity, in the form of two CSVs:
 ```
-# Virtual environment with neuprint_helper installed must be active
-# This is what the line "source ./venv/bin/activate" above does.
+cd neuprint_helper
+source ./venv/bin/activate
 write_neuprint_csvs.py
 ```
 

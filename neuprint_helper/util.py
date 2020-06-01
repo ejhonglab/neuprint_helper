@@ -16,7 +16,8 @@ neuprint_token_env_var = 'NEUPRINT_APPLICATION_CREDENTIALS'
 if neuprint_token_env_var not in os.environ:
     raise RuntimeError('You must set the environment variable '
         f'{neuprint_token_env_var} before neuprint_helper can work! '
-        '\n\nContact Tom if you do not know how / if not possible!'
+        '\n\nContact Tom if you do not know how / if not possible!\n'
+        'You could try again in a new terminal (with virtual env active)?'
     )
 
 # TODO delete. for testing that R is setting my env var correctly.
