@@ -18,6 +18,17 @@ if neuprint_token_env_var not in os.environ:
         f'{neuprint_token_env_var} before neuprint_helper can work! '
         '\n\nContact Tom if you do not know how / if not possible!'
     )
+
+# TODO delete. for testing that R is setting my env var correctly.
+val = os.environ[neuprint_token_env_var]
+print(neuprint_token_env_var + ':', val)
+
+with open('/home/tom/src/neuprint_test/.envrc', 'r') as f:
+    data = f.read()
+envrc_val = data.split('=')[1].rstrip()
+assert val == envrc_val
+#
+
 # Now we can just let `neuprint` handle it.
 del neuprint_token_env_var
 
@@ -97,15 +108,15 @@ userguide_properties = {
     'ConnectsTo': ['roiInfo', 'weight', 'weightHp']
 }
 
-# ipdb> nu.queries.NEURON_COLS
+# >>> nu.queries.NEURON_COLS
 # ['bodyId', 'instance', 'type', 'pre', 'post', 'size', 'status', 'cropped',
 #  'statusLabel','cellBodyFiber', 'somaRadius', 'somaLocation', 'inputRois',
 #  'outputRois', 'roiInfo']
 #
-# ipdb> set(nu.queries.NEURON_COLS) - set(userguide_neuron_properties)
+# >>> set(nu.queries.NEURON_COLS) - set(userguide_neuron_properties)
 # {'outputRois', 'cellBodyFiber', 'inputRois'}
 #
-# ipdb> set(userguide_neuron_properties) - set(nu.queries.NEURON_COLS)
+# >>> set(userguide_neuron_properties) - set(nu.queries.NEURON_COLS)
 # {'timestamp', 'primaryNeurite'}
 
 # TODO delete after figuring out differences / better way to get properties
