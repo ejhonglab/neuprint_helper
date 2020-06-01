@@ -20,13 +20,15 @@ if neuprint_token_env_var not in os.environ:
     )
 
 # TODO delete. for testing that R is setting my env var correctly.
-val = os.environ[neuprint_token_env_var]
-print(neuprint_token_env_var + ':', val)
+tom_token_file = '/home/tom/src/neuprint_test/.envrc'
+if os.path.exists(tom_token_file):
+    val = os.environ[neuprint_token_env_var]
+    print(neuprint_token_env_var + ':', val)
 
-with open('/home/tom/src/neuprint_test/.envrc', 'r') as f:
-    data = f.read()
-envrc_val = data.split('=')[1].rstrip()
-assert val == envrc_val
+    with open(tom_token_file, 'r') as f:
+        data = f.read()
+    envrc_val = data.split('=')[1].rstrip()
+    assert val == envrc_val
 #
 
 # Now we can just let `neuprint` handle it.
