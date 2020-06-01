@@ -392,10 +392,21 @@ def fetch_function(fetch_fn):
     return wrapped
 
 
-# TODO TODO TODO
-'''
-def write_csvs(dataframes, names=None, overwrite=False, verbose=True,
-    zip_=False, path=None):
+def write_csvs(*dataframes, names=None, path=None, **kwargs):
+    # TODO TODO do *args and single iterable arg as first positional really need
+    # different handling??? fix this bit if so
+    # TODO handle edge case len 0
+    '''
+    if len(args) == 1:
+        assert is_dataframe(args[0])
+        # (probably in write_csv)
+        if is_dataframe(dataframes):
+            dataframes = [data_frame]
+    else:
+        dataframes = args
+    '''
+
+    # TODO handle edge case when some not dataframes?
 
     # TODO also check all dataframes have __name__ defined sensibly, and err
     # if not (and `names` not passed)
@@ -405,9 +416,22 @@ def write_csvs(dataframes, names=None, overwrite=False, verbose=True,
             f'!\nlen(dataframes)={len(dataframes)} != len(names)={len(names)}'
         )
 
-    if path is None:
-        pass
-'''
+    # TODO test
+    if names is None:
+        names = [x.__name__ for x in dataframes]
+
+    # TODO test
+    if path is not None and not os.path.isdir(path):
+        raise IOError('path must exist! should be a directory to put CSVs in.')
+
+    for df, name in zip(dataframes, names):
+        csv_path = f'{name}.csv'
+        if path is not None:
+            csv_path = join(path, csv_path)
+
+        print(f'Writing to {csv_path}...', end='', flush=True)
+        df.to_csv(csv_path, **kwargs)
+        print(' done')
 
 
 # TODO flag to return diff cnxn format, see the neuprint util conn conversion fn

@@ -9,4 +9,5 @@ setup(
     version='0.0.1',
     install_requires=['numpy', 'pandas', 'neuprint-python'],
     packages=find_packages(),
+    scripts=['scripts/write_neuprint_csvs.py'],
 )
