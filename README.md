@@ -69,3 +69,11 @@ for more details.
 - `print_time` (default=`False`) Prints the time (in seconds) the query function
   takes to run, at the end of each call.
 
+If you would like to add your own query function inside `util.py`, you can add
+the line:
+```
+@fetch_function
+```
+...before the function definition, and this will automatically add the common
+keyword arguments described above (and they should function correctly wihout
+you needing to do anything).

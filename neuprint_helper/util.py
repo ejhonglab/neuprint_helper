@@ -435,6 +435,10 @@ def write_csvs(*dataframes, names=None, path=None, **kwargs):
         print(' done')
 
 
+# TODO TODO TODO check that the PNs actually are all presynaptic, w/ how i'm
+# doing this query. maybe add a flag to return additional stuff postsynaptic?
+# TODO is this a/the source of the discrepancy between what yang and i came up
+# with?
 # TODO flag to return diff cnxn format, see the neuprint util conn conversion fn
 @fetch_function
 def pn_kc_connections(properties=None, sum_across_rois=False,
