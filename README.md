@@ -60,6 +60,11 @@ for more details.
      to produce totals for each (presynaptic PN, postsynaptic KC) pair.
 
   - `checks` (default=`False`) Runs some additional sanity checks.
+  
+  - See also the keyword arguments to `fetch_adjacencies` in the `neuprint` docs
+    [here](https://connectome-neuprint.github.io/neuprint-python/docs/queries.html#neuprint.queries.fetch_adjacencies).
+    - You will likely not need to use these, however.
+    - Passing `include_nonprimary=True` might produce unexpected output.
 
 #### Keyword arguments available to all query functions
 
