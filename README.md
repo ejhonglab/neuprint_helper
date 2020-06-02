@@ -45,7 +45,7 @@ for more details.
 
 ### Available functions
 
-- `pn_kc_connections`
+- `pn_kc_connections`  
   Returns:
   - `neuron_df` (`DataFrame`) Merge with `connection_df` if you want.
 
