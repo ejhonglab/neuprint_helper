@@ -75,5 +75,5 @@ the line:
 @fetch_function
 ```
 ...before the function definition, and this will automatically add the common
-keyword arguments described above (and they should function correctly wihout
+keyword arguments described above (and they should function correctly without
 you needing to do anything).
