@@ -56,8 +56,8 @@ for more details.
   - `properties` (list of `str`) Neuron property names to retrieve.
      By default, I try to return all available properties.
 
-  - `sum_across_rois` (default=`False`) For the second returned
-     By default, I try to return all available properties.
+  - `sum_across_rois` (default=`False`) Adds `connection_df.weight` across ROIs,
+     to produce totals for each (presynaptic PN, postsynaptic KC) pair.
 
   - `checks` (default=`False`) Runs some additional sanity checks.
 
